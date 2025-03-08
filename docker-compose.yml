@@ -27,3 +27,7 @@ networks:
     external: false
   backend:
     external: false
+
+volumes:
+  npm_data:
+  npm_letsencrypt:
