@@ -70,7 +70,7 @@ services:
       - postgres
     
     ports:
-      - 5050:80"
+      - 5050:80
 
     # Place PGAdmin on both 'backend' (to talk to Postgres) and 'web' (so NPM can proxy it)
     networks:
