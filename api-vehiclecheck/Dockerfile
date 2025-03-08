@@ -1,24 +1,22 @@
-# Use a slim Python base image
+# Use official Python image
 FROM python:3.10-slim
 
-# Create a working directory
+# Set working directory
 WORKDIR /app
 
 # Install system dependencies (for psycopg2)
 RUN apt-get update && apt-get install -y \
     libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file into container
+# Copy and install dependencies
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
+# Copy app source code
 COPY . /app
 
-# Expose port 5000 (Flask default)
+# Expose port
 EXPOSE 5000
 
-# By default, get DB env variables from docker-compose
-CMD ["python3", "app.py"]
+# Run the application
+CMD ["python", "app.py"]
