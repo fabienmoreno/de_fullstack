@@ -1,109 +1,101 @@
-import os
 from flask import Flask, request, jsonify
-import psycopg2
-from psycopg2 import sql
+from flask_sqlalchemy import SQLAlchemy
+import os
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Read DB connection details from environment variables
-DB_HOST = os.environ.get('DB_HOST', 'postgres')
-DB_PORT = os.environ.get('DB_PORT', '5432')
+# Build the database URI from environment variables
 DB_USER = os.environ.get('DB_USER', 'postgres')
 DB_PASSWORD = os.environ.get('DB_PASSWORD', 'password')
-DB_NAME = os.environ.get('DB_NAME', 'main_db')
+DB_HOST = os.environ.get('DB_HOST', 'postgres')  # This should match the service name or IP of your PostgreSQL container
+DB_PORT = os.environ.get('DB_PORT', '5432')
+DB_NAME = os.environ.get('DB_NAME', 'fleetdb')
 
-# Create a connection function
-def get_connection():
-    return psycopg2.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        dbname=DB_NAME
-    )
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# OPTIONAL: Initialize table on startup (quick & dirty approach)
-# In production, you'd typically use migrations or a dedicated init script.
-def init_table():
-    conn = get_connection()
-    cur = conn.cursor()
-    create_table_query = """
-    CREATE TABLE IF NOT EXISTS vehicles (
-        id SERIAL PRIMARY KEY,
-        date_of_check DATE,
-        color VARCHAR(50) NOT NULL,
-        brand VARCHAR(100) NULL
-    )
-    """
-    cur.execute(create_table_query)
-    conn.commit()
-    cur.close()
-    conn.close()
+db = SQLAlchemy(app)
 
-@app.route('/vehicle', methods=['POST'])
-def create_vehicle():
-    data = request.get_json()
-    if not data:
-        return jsonify({'error': 'Invalid JSON'}), 400
+class Vehicle(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    car_registration = db.Column(db.String(20), unique=True, nullable=False)
+    date_first_registration = db.Column(db.Date, nullable=False)
+    owner_name = db.Column(db.String(100), nullable=False)
+    color = db.Column(db.String(50))
+    number_of_seats = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    date_of_check = data.get('date_of_check')  # can be None
-    color = data.get('color')
-    brand = data.get('brand')  # optional
-
-    if not color:
-        return jsonify({'error': 'Vehicle color is mandatory'}), 400
-
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        insert_query = """
-            INSERT INTO vehicles (date_of_check, color, brand)
-            VALUES (%s, %s, %s)
-            RETURNING id;
-        """
-        cur.execute(insert_query, (date_of_check, color, brand))
-        new_id = cur.fetchone()[0]
-        conn.commit()
-        cur.close()
-        conn.close()
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-    return jsonify({'message': 'Vehicle created', 'id': new_id}), 201
-
-@app.route('/vehicle/<int:vehicle_id>', methods=['GET'])
-def get_vehicle(vehicle_id):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        select_query = """
-            SELECT id, date_of_check, color, brand
-            FROM vehicles
-            WHERE id = %s
-        """
-        cur.execute(select_query, (vehicle_id,))
-        row = cur.fetchone()
-        cur.close()
-        conn.close()
-
-        if row is None:
-            return jsonify({'error': 'Vehicle not found'}), 404
-
-        # row -> (id, date_of_check, color, brand)
-        vehicle_data = {
-            'id': row[0],
-            'date_of_check': str(row[1]) if row[1] else None,
-            'color': row[2],
-            'brand': row[3]
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "car_registration": self.car_registration,
+            "date_first_registration": self.date_first_registration.isoformat(),
+            "owner_name": self.owner_name,
+            "color": self.color,
+            "number_of_seats": self.number_of_seats,
+            "created_at": self.created_at.isoformat()
         }
-        return jsonify(vehicle_data), 200
 
+# Endpoint to add a new vehicle
+@app.route('/vehicles', methods=['POST'])
+def add_vehicle():
+    data = request.get_json()
+    # Check mandatory fields
+    for field in ['car_registration', 'date_first_registration', 'owner_name']:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    # Validate and parse the date
+    try:
+        date_first_registration = datetime.strptime(data['date_first_registration'], "%Y-%m-%d").date()
+    except ValueError:
+        return jsonify({"error": "Invalid date format for date_first_registration. Use YYYY-MM-DD."}), 400
+
+    # Validate number_of_seats if provided
+    number_of_seats = None
+    if 'number_of_seats' in data:
+        try:
+            number_of_seats = int(data['number_of_seats'])
+            if number_of_seats <= 0:
+                raise ValueError
+        except ValueError:
+            return jsonify({"error": "number_of_seats must be a positive integer"}), 400
+
+    vehicle = Vehicle(
+        car_registration=data['car_registration'],
+        date_first_registration=date_first_registration,
+        owner_name=data['owner_name'],
+        color=data.get('color'),
+        number_of_seats=number_of_seats
+    )
+
+    try:
+        db.session.add(vehicle)
+        db.session.commit()
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        db.session.rollback()
+        return jsonify({"error": "Vehicle could not be added", "details": str(e)}), 500
+
+    return jsonify(vehicle.as_dict()), 201
+
+# Endpoint to get vehicle by id
+@app.route('/vehicles/<int:vehicle_id>', methods=['GET'])
+def get_vehicle_by_id(vehicle_id):
+    vehicle = Vehicle.query.get(vehicle_id)
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+    return jsonify(vehicle.as_dict()), 200
+
+# Endpoint to get vehicle by car registration
+@app.route('/vehicles/registration/<car_reg>', methods=['GET'])
+def get_vehicle_by_registration(car_reg):
+    vehicle = Vehicle.query.filter_by(car_registration=car_reg).first()
+    if not vehicle:
+        return jsonify({"error": "Vehicle not found"}), 404
+    return jsonify(vehicle.as_dict()), 200
 
 if __name__ == '__main__':
-    # Initialize table for quick demo. In real usage, handle migrations properly.
-    init_table()
-
-    # Start Flask app on port 5000
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    with app.app_context():
+        db.create_all()  # Creates tables if they do not exist
+    app.run(host='0.0.0.0', port=5000)

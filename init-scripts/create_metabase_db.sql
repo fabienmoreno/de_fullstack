@@ -1,0 +1,4 @@
+-- init_metabase_db.sql
+CREATE DATABASE metabase_db;
+CREATE USER metabase_user WITH ENCRYPTED PASSWORD "${POSTGRES_METABASE_USER_PASSWORD}";
+GRANT ALL PRIVILEGES ON DATABASE metabase_db TO metabase_user;
