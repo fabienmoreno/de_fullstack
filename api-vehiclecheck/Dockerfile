@@ -21,4 +21,4 @@ COPY . /app
 EXPOSE 5000
 
 # By default, get DB env variables from docker-compose
-CMD [\"python\", \"app.py\"]
+CMD ["python3", "app.py"]
