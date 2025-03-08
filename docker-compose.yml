@@ -77,6 +77,26 @@ services:
       - backend
       - web
 
+  #########################
+  # Flask app vehicle
+  #########################
+  flask_app:
+      build: ./api-vehiclecheck   # This folder
+      container_name: flask_app
+      restart: always
+      depends_on:
+        - postgres
+      environment:
+        DB_HOST: postgres
+        DB_PORT: 5432
+        DB_USER: ${POSTGRES_FLASK_USER}
+        DB_PASSWORD: ${POSTGRES_FLASK_PASSWORD}
+        DB_NAME: ${POSTGRES_MAIN_DB}
+      networks:
+        - web
+        - backend
+
+
 networks:
   web:
     external: false
