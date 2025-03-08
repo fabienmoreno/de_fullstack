@@ -1,22 +1,17 @@
-# Use official Python image
-FROM python:3.10-slim
+FROM python:3.9-slim
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Install system dependencies (for psycopg2)
-RUN apt-get update && apt-get install -y \
-    libpq-dev gcc && rm -rf /var/lib/apt/lists/*
-
-# Copy and install dependencies
-COPY requirements.txt .
+# Copy requirements and install dependencies
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app source code
-COPY . /app
+# Copy the rest of the application code
+COPY . .
 
-# Expose port
+# Expose the port the app runs on
 EXPOSE 5000
 
-# Run the application
-CMD ["python", "app.py"]
+# Command to run the application
+CMD ["python", "app2.py"]
