@@ -1,8 +1,29 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  web:
-    image: nginx:alpine
-    container_name: nginx-test
+  #########################
+  # Nginx Proxy Manager
+  #########################
+  npm:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: npm
+    restart: always
     ports:
-      - "8080:80"
+      - '80:80'     # HTTP
+      - '443:443'   # HTTPS
+      - '81:81'     # Admin console
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - web
+    # Example optional environment variables:
+    # environment:
+    #   SQL_DATABASE: "npm"
+    #   SQL_USER: "admin"
+
+networks:
+  web:
+    external: false
+  backend:
+    external: false
