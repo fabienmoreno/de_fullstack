@@ -89,9 +89,9 @@ services:
       environment:
         DB_HOST: postgres
         DB_PORT: 5432
-        DB_USER: ${POSTGRES_FLASK_USER}
-        DB_PASSWORD: ${POSTGRES_FLASK_PASSWORD}
-        DB_NAME: ${POSTGRES_MAIN_DB}
+        DB_USER: ${POSTGRES_USER}
+        DB_PASSWORD: ${POSTGRES_PASSWORD}
+        DB_NAME: ${POSTGRES_DB}
       networks:
         - web
         - backend
