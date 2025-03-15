@@ -75,6 +75,11 @@ services:
     restart: always
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MB_POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     environment:
       POSTGRES_DB: ${MB_POSTGRES_DB}
       POSTGRES_USER: ${MB_POSTGRES_USER}
@@ -90,7 +95,8 @@ services:
     networks:
       - app-network
     depends_on:
-      - metabase-db
+      metabase-db:
+        condition: service_healthy
     environment:
       MB_DB_TYPE: postgres
       MB_DB_DBNAME: ${MB_POSTGRES_DB}
@@ -113,6 +119,8 @@ services:
     depends_on:
       - postgres
       - metabase-db
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
     ports:
       - 5050:80
     networks:
@@ -129,6 +137,7 @@ volumes:
   npm-db-data:
   postgres_data:
   metabase-db-data:
+  pgadmin-data:
 
 
 
