@@ -65,6 +65,8 @@ services:
       - "traefik.http.routers.api-vehiclecheck.rule=Host(`api-vehiclecheck.de.fabienmoreno.me`)"
       - "traefik.http.routers.api-vehiclecheck.entrypoints=websecure"
       - "traefik.http.routers.api-vehiclecheck.tls.certresolver=myresolver"
+    command: >
+      sh -c "flask db upgrade && python app.py"
 
   # 🔹 Metabase Database
   metabase-db:

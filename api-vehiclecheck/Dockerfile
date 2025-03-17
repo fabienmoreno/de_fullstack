@@ -13,5 +13,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Expose the application port
 EXPOSE 5000
 
-# Run the Flask application
-CMD ["python", "app.py"]
+# Run migrations and start the app
+CMD ["sh", "-c", "flask db upgrade && python app.py"]
