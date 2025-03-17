@@ -1,28 +1,32 @@
 version: '3.8'
 
 services:
-  # Traefik
+  # 🔹 Traefik Reverse Proxy
   traefik:
-    image: traefik:v2.10 # Use a specific version for stability
+    image: traefik:v2.10
     container_name: traefik
     restart: always
+    command:
+      - "--api.dashboard=true" # Enable the Traefik Dashboard
+      - "--api.insecure=true" # Keep this only for testing, disable in production
+      - "--providers.docker=true" # Enable Docker as a provider
+      - "--providers.docker.exposedbydefault=false" # Do not expose all containers automatically
+      - "--entrypoints.web.address=:80" # Define HTTP entrypoint
+      - "--entrypoints.websecure.address=:443" # Define HTTPS entrypoint
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true" # Enable Let's Encrypt TLS challenge
+      - "--certificatesresolvers.myresolver.acme.email=admin@fabienmoreno.me" # Email for SSL registration
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json" # Storage for SSL certificates
     ports:
       - "80:80"    # HTTP
       - "443:443"  # HTTPS
+      - "8080:8080"  # Traefik Dashboard (remove for production)
     networks:
       - app-network
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Needed for Docker provider
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml  # Mount the file directly
-      - ./traefik/traefik_dynamic.yml:/etc/traefik/traefik_dynamic.yml # Mount the file directly
-    labels: # Add these labels to traefik service
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.de.fabienmoreno.me`)" # Optional Traefik dashboard
-      - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=admin:$$apr1$$Y.Y2W6FA$$zK68T2K83J88l4L31/6Yp1" # Replace with htpasswd generated password
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Allow Traefik to manage Docker services
+      - "./letsencrypt:/letsencrypt" # Storage for SSL certificates
 
-  # Main postgres DB for app
+  # 🔹 PostgreSQL for App
   postgres:
     image: postgres:15
     container_name: app_postgres
@@ -43,7 +47,7 @@ services:
     networks:
       - app-network
 
-  # Metabase DB
+  # 🔹 Metabase Database
   metabase-db:
     image: postgres:15
     container_name: metabase-db
@@ -62,7 +66,7 @@ services:
     volumes:
       - metabase-db-data:/var/lib/postgresql/data
 
-  # Metabase app
+  # 🔹 Metabase Application
   metabase:
     image: metabase/metabase:latest
     container_name: metabase
@@ -79,16 +83,13 @@ services:
       MB_DB_PORT: 5432
       MB_DB_USER: ${MB_POSTGRES_USER}
       MB_DB_PASS: ${MB_POSTGRES_PASSWORD}
-    ports:
-      - "3000:3000"
-    labels: # Add these labels to metabase service
+    labels:
       - "traefik.enable=true"
       - "traefik.http.routers.metabase.rule=Host(`metabase.de.fabienmoreno.me`)"
-      - "traefik.http.routers.metabase.entrypoints=web,websecure"
-      - "traefik.http.routers.metabase.tls=true"
-      # - "traefik.http.routers.metabase.middlewares=auth" # Optional authentication
+      - "traefik.http.routers.metabase.entrypoints=websecure"
+      - "traefik.http.routers.metabase.tls.certresolver=myresolver"
 
-  # PG Admin
+  # 🔹 PGAdmin
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
@@ -101,23 +102,20 @@ services:
       - metabase-db
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-    ports:
-      - 5050:80
-    networks:
-      - app-network
-    labels: # Add these labels to pgadmin service
+    labels:
       - "traefik.enable=true"
       - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.de.fabienmoreno.me`)"
-      - "traefik.http.routers.pgadmin.entrypoints=web,websecure"
-      - "traefik.http.routers.pgadmin.tls=true"
-      # - "traefik.http.routers.pgadmin.middlewares=auth" # Optional authentication
+      - "traefik.http.routers.pgadmin.entrypoints=websecure"
+      - "traefik.http.routers.pgadmin.tls.certresolver=myresolver"
+    networks:
+      - app-network
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
+  letsencrypt:
   postgres_data:
   metabase-db-data:
   pgadmin-data:
-  traefik_data: # Add this volume for Traefik
