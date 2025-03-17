@@ -1,74 +1,53 @@
 version: '3.8'
 
 services:
-  # NPM App
-  nginx-proxy-manager:
-    image: jc21/nginx-proxy-manager:latest
-    container_name: nginx-proxy-manager
+  # 🔹 Traefik Reverse Proxy
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
     restart: always
+    command:
+      - "--api.dashboard=true" # Enable the Traefik Dashboard
+      - "--api.insecure=true" # Keep this only for testing, disable in production
+      - "--providers.docker=true" # Enable Docker as a provider
+      - "--providers.docker.exposedbydefault=false" # Do not expose all containers automatically
+      - "--entrypoints.web.address=:80" # Define HTTP entrypoint
+      - "--entrypoints.websecure.address=:443" # Define HTTPS entrypoint
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true" # Enable Let's Encrypt TLS challenge
+      - "--certificatesresolvers.myresolver.acme.email=admin@fabienmoreno.me" # Email for SSL registration
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json" # Storage for SSL certificates
     ports:
-      - "80:80"      # HTTP
-      - "443:443"    # HTTPS
-      - "81:81"      # Admin interface
+      - "80:80"    # HTTP
+      - "443:443"  # HTTPS
+      - "8080:8080"  # Traefik Dashboard (remove for production)
     networks:
       - app-network
-    environment:
-      DB_MYSQL_HOST: npm-db
-      DB_MYSQL_PORT: 3306
-      DB_MYSQL_USER: npm
-      DB_MYSQL_PASSWORD: ${NPM_DB_MYSQL_PASSWORD}
-      DB_MYSQL_NAME: npm
-    depends_on:
-      - npm-db
     volumes:
-      - npm-data:/data
-      - npm-letsencrypt:/etc/letsencrypt
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Allow Traefik to manage Docker services
+      - "./letsencrypt:/letsencrypt" # Storage for SSL certificates
 
-  # NPM DB
-  npm-db:
-    image: mariadb:10.5
-    container_name: npm-db
-    restart: always
-    networks:
-      - app-network
-    environment:
-      MYSQL_ROOT_PASSWORD: ${NPM_MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: npm
-      MYSQL_USER: npm
-      MYSQL_PASSWORD: ${NPM_DB_MYSQL_PASSWORD}
-    volumes:
-      - npm-db-data:/var/lib/mysql
-
-  # Main postgres DB for app
+  # 🔹 PostgreSQL for App
   postgres:
     image: postgres:15
     container_name: app_postgres
     restart: always
-    
-    # Use environment variables that you'll set in Portainer
     environment:
       POSTGRES_USER: "${APP_POSTGRES_USER}"
       POSTGRES_PASSWORD: "${APP_POSTGRES_PASSWORD}"
       POSTGRES_DB: "${APP_POSTGRES_DB}"
-    
-    # Command line flags to enable logical replication
     command: >
       postgres
         -c wal_level=logical
         -c max_wal_senders=1
         -c max_replication_slots=1
-    
-    # Publish the DB port externally so Airbyte Cloud can connect
     ports:
       - '5432:5432'
-    
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    
     networks:
       - app-network
-  
-  # Metabase DB
+
+  # 🔹 Metabase Database
   metabase-db:
     image: postgres:15
     container_name: metabase-db
@@ -87,7 +66,7 @@ services:
     volumes:
       - metabase-db-data:/var/lib/postgresql/data
 
-  # Metabase app
+  # 🔹 Metabase Application
   metabase:
     image: metabase/metabase:latest
     container_name: metabase
@@ -104,15 +83,17 @@ services:
       MB_DB_PORT: 5432
       MB_DB_USER: ${MB_POSTGRES_USER}
       MB_DB_PASS: ${MB_POSTGRES_PASSWORD}
-    ports:
-      - "3000:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.metabase.rule=Host(`metabase.de.fabienmoreno.me`)"
+      - "traefik.http.routers.metabase.entrypoints=websecure"
+      - "traefik.http.routers.metabase.tls.certresolver=myresolver"
 
-  # PG Admin
+  # 🔹 PGAdmin
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: pgadmin
     restart: always
-    # Environment variables set in Portainer
     environment:
       PGADMIN_DEFAULT_EMAIL: "${PGADMIN_DEFAULT_EMAIL}"
       PGADMIN_DEFAULT_PASSWORD: "${PGADMIN_DEFAULT_PASSWORD}"
@@ -121,34 +102,20 @@ services:
       - metabase-db
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-    ports:
-      - 5050:80
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.de.fabienmoreno.me`)"
+      - "traefik.http.routers.pgadmin.entrypoints=websecure"
+      - "traefik.http.routers.pgadmin.tls.certresolver=myresolver"
     networks:
       - app-network
-
 
 networks:
   app-network:
     driver: bridge
 
 volumes:
-  npm-data:
-  npm-letsencrypt:
-  npm-db-data:
+  letsencrypt:
   postgres_data:
   metabase-db-data:
   pgadmin-data:
-
-
-
-# Metabase postgres instance
-## With Database mb_app created
-
-
-# PG Admin
-# Metabase app
-# Flask App
-
-# Volumes 
-
-# Network
