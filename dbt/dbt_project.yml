@@ -1,0 +1,8 @@
+name: 'de_project'
+
+config-version: 2
+version: '1.0.0'
+
+profile: 'vehicle_project'
+
+model-paths: ["models"]
