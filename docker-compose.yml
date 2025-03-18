@@ -131,6 +131,24 @@ services:
     networks:
       - app-network
 
+  # 🔹 DBT Service
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:latest
+    container_name: dbt
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DBT_PROFILES_DIR: /dbt
+      POSTGRES_HOST: postgres
+      POSTGRES_USER: "${APP_POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${APP_POSTGRES_PASSWORD}"
+      POSTGRES_DB: "${APP_POSTGRES_DB}"
+    volumes:
+      - ./dbt:/dbt
+    networks:
+      - app-network
+
 networks:
   app-network:
     driver: bridge
