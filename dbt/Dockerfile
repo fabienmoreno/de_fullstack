@@ -3,7 +3,7 @@ FROM python:3.10-slim-buster
 RUN apt-get update \
     && apt-get install -y --no-install-recommends
 
-WORKDIR /usr/src/dbt/dbt_project
+WORKDIR /usr/src/dbt
 
 # Install the dbt Postgres adapter. This step will also install dbt-core
 RUN pip install --upgrade pip

@@ -152,7 +152,7 @@ services:
       POSTGRES_PASSWORD: "${APP_POSTGRES_PASSWORD}"
       POSTGRES_DB: "${APP_POSTGRES_DB}"
     volumes:
-      - ./dbt:/usr/src/dbt
+      - ./dbt/dbt_project:/usr/src/dbt/dbt_project
     networks:
       - app-network
 
