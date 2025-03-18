@@ -47,6 +47,27 @@ services:
     networks:
       - app-network
 
+  # 🔹 Flask API Service
+  api-vehiclecheck:
+    build: ./api-vehiclecheck
+    container_name: api_vehiclecheck
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: "postgresql://${APP_POSTGRES_USER}:${APP_POSTGRES_PASSWORD}@postgres:5432/${APP_POSTGRES_DB}"
+    networks:
+      - app-network
+    ports:
+      - "5000:5000" 
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api-vehiclecheck.rule=Host(`api-vehiclecheck.de.fabienmoreno.me`)"
+      - "traefik.http.routers.api-vehiclecheck.entrypoints=websecure"
+      - "traefik.http.routers.api-vehiclecheck.tls.certresolver=myresolver"
+    command: >
+      sh -c "flask db init --directory migrations 2>/dev/null || true && flask db migrate -m 'Initial migration' 2>/dev/null || true && flask db upgrade && python app.py"
+
   # 🔹 Metabase Database
   metabase-db:
     image: postgres:15
