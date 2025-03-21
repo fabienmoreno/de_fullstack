@@ -137,18 +137,33 @@ services:
       - app-network
 
   dbt:
-    image: ghcr.io/dbt-labs/dbt-postgres:1.0.latest
+    image: ghcr.io/dbt-labs/dbt-postgres:1.6.0 # Use the dbt-postgres image (IMPORTANT!)
     container_name: dbt
-    restart: always
-    volumes:
-      - ./dbt:/usr/app
-      - ./dbt/profiles.yml:/root/.dbt/profiles.yml
-    working_dir: /usr/app
+    restart: on-failure  # Restart only if the container exits with an error
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy  # Ensure Postgres is healthy before starting dbt
+    volumes:
+      - ./dbt:/usr/app  # Mount your dbt project directory into /usr/app
+      #- ~/.dbt/profiles.yml:/root/.dbt/profiles.yml  # Mount profiles.yml (BETTER: Use environment variables, see below)
+    environment:
+      DBT_PROFILES_DIR: /root/.dbt/  #  Tell dbt where to find profiles (even if using env vars)
+      DBT_TARGET: dev
+      # --- Database Connection (Using Environment Variables - BEST PRACTICE) ---
+      DBT_PROFILE: my_dbt_profile # USE THE SAME PROFILE NAME AS IN dbt_project.yml
+      DBT_TYPE: postgres
+      DBT_HOST: postgres          # Use the Docker service name for the host
+      DBT_PORT: 5432
+      DBT_USER: "${APP_POSTGRES_USER}"     # Use your existing .env variables
+      DBT_PASS: "${APP_POSTGRES_PASSWORD}"
+      DBT_DBNAME: "${APP_POSTGRES_DB}"
+      DBT_SCHEMA: public         #  Set your default schema (often 'public')
     networks:
       - app-network
-    command: ["run"]
+    # Entrypoint to keep the container running, important for scheduled runs
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - "tail -f /dev/null"
 
 networks:
   app-network:

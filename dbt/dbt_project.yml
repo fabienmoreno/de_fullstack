@@ -1,40 +1,22 @@
-# Name your project! Project names should contain only lowercase characters
-# and underscores. A good package name should reflect your organization's
-# name or the intended use of these models
-name: 'de_project'
-config-version: 2
+name: 'my_dbt_project'  # Choose a name for your dbt project
 version: '1.0.0'
+config-version: 2
 
+profile: 'my_dbt_profile'  #  Name of the profile to use (from profiles.yml)
 
-# This setting configures which "profile" dbt uses for this project.
-profile: 'vehicle_project'
+model-paths: ["models"]     # Where to find your models
+seed-paths: ["seeds"]       # Where to find your seeds
+analysis-paths: ["analyses"] # Where to find your analyses
+macro-paths: ["macros"]      # Where to find your macros
+test-paths: ["tests"]       #Where to find your tests.
 
+target-path: "target"      # Where to put compiled code
+clean-targets: ["target", "dbt_packages"]  # What to clean with `dbt clean`
+log-path: "logs"           # Where to store logs
 
-# These configurations specify where dbt should look for different types of files.
-# The `model-paths` config, for example, states that models in this project can be
-# found in the "models/" directory. You probably won't need to change these!
-model-paths: ["models"]
-seed-paths: ["seeds"]
-test-paths: ["tests"]
-analysis-paths: ["analyses"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
-
-
-target-path: "target"  # directory which will store compiled SQL files
-clean-targets:         # directories to be removed by `dbt clean`
-  - "target"
-  - "dbt_packages"
-
-
-# Configuring models
-# Full documentation: https://docs.getdbt.com/docs/configuring-models
-
-# In this example config, we tell dbt to build all models in the example/ directory
-# as tables. These settings can be overridden in the individual model files
-# using the `{{ config(...) }}` macro.
-#models:
-#  test_dbt_project:
-#    # Config indicated by + and applies to all files under models/example/
-#    example:
-#      +materialized: view
+# Materialization configurations (how models are built)
+models:
+  my_dbt_project:          #  Apply these settings to your project
+    +materialized: view    # Default materialization (can be overridden per model)
+    example:
+      +materialized: table # All models in the 'example' directory will be tables

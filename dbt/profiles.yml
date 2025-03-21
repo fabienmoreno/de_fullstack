@@ -1,4 +1,4 @@
-vehicle_project:
+my_dbt_profile:
   target: dev
   outputs:
     dev:
