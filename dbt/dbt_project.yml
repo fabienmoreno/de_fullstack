@@ -1,22 +1,21 @@
-name: 'my_dbt_project'  # Choose a name for your dbt project
+name: 'my_dbt_project'
 version: '1.0.0'
 config-version: 2
 
-profile: 'my_dbt_profile'  #  Name of the profile to use (from profiles.yml)
+profile: 'my_dbt_profile'  # Matches DBT_PROFILE in docker-compose.yml
 
-model-paths: ["models"]     # Where to find your models
-seed-paths: ["seeds"]       # Where to find your seeds
-analysis-paths: ["analyses"] # Where to find your analyses
-macro-paths: ["macros"]      # Where to find your macros
-test-paths: ["tests"]       #Where to find your tests.
+model-paths: ["models"]
+seed-paths: ["seeds"]
+analysis-paths: ["analyses"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
 
-target-path: "target"      # Where to put compiled code
-clean-targets: ["target", "dbt_packages"]  # What to clean with `dbt clean`
-log-path: "logs"           # Where to store logs
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+log-path: "logs"
 
-# Materialization configurations (how models are built)
 models:
-  my_dbt_project:          #  Apply these settings to your project
-    +materialized: view    # Default materialization (can be overridden per model)
+  my_dbt_project:
+    +materialized: view  # Default: create as views
     example:
-      +materialized: table # All models in the 'example' directory will be tables
+      +materialized: table # Override: create as tables in 'example'
