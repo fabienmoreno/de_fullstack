@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: vehicle_data
+    database: de_app
+    schema: public
+    tables:
+      - name: vehicle
+        description: "Vehicle registration details"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: car_registration
+            description: "Car registration number"
+          - name: date_first_registration
+            description: "Date of first registration"
+          - name: owner_name
+            description: "Owner's name"
+          - name: color
+            description: "Vehicle color"
+          - name: number_of_seats
+            description: "Number of seats"
+          - name: created_at
+            description: "Record creation timestamp"
+models:
+  - name: yearly_vehicle_count
+    columns:
+      - name: registration_year
+        tests:
+          - not_null
+      - name: number_of_cars
+        tests:
+          - not_null
+          - unique

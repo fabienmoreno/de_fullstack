@@ -1,0 +1,21 @@
+name: 'my_dbt_project'
+version: '1.0.0'
+config-version: 2
+
+profile: 'my_dbt_profile'  # Matches DBT_PROFILE in docker-compose.yml
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+analysis-paths: ["analyses"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+log-path: "logs"
+
+models:
+  my_dbt_project:
+    +materialized: view  # Default: create as views
+    example:
+      +materialized: table # Override: create as tables in 'example'
