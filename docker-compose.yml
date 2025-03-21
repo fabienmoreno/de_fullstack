@@ -136,25 +136,19 @@ services:
     networks:
       - app-network
 
-  # 🔹 DBT Service
   dbt:
-#    image: ghcr.io/dbt-labs/dbt-postgres:latest
+    image: ghcr.io/dbt-labs/dbt-postgres:1.0.latest
     container_name: dbt
-    build: ./dbt
     restart: always
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      DBT_PROFILES_DIR: /dbt
-      POSTGRES_HOST: postgres
-      POSTGRES_USER: "${APP_POSTGRES_USER}"
-      POSTGRES_PASSWORD: "${APP_POSTGRES_PASSWORD}"
-      POSTGRES_DB: "${APP_POSTGRES_DB}"
     volumes:
-      - ./dbt:/usr/src/dbt
+      - ./dbt:/usr/app
+      - ./dbt/profiles.yml:/root/.dbt/profiles.yml
+    working_dir: /usr/app
+    depends_on:
+      - postgres
     networks:
       - app-network
+    command: ["dbt", "run"]
 
 networks:
   app-network:
