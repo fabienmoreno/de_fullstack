@@ -148,7 +148,7 @@ services:
       - postgres
     networks:
       - app-network
-    command: ["dbt", "run"]
+    command: ["run"]
 
 networks:
   app-network:
