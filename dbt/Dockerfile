@@ -18,16 +18,22 @@ RUN apt-get update && \
     apt-get install -y cron && \
     rm -rf /var/lib/apt/lists/*
 
-# Create log folder for cron logs
+# Create cron log directory
 RUN mkdir -p /var/log/cron
 
-# Define the cron job directly via shell
-RUN echo "*/5 * * * * cd /app && dbt run >> /var/log/cron/dbt.log 2>&1" > /etc/cron.d/dbt-cron
+# Add the cron job to run dbt every 5 minutes
+RUN echo "*/5 * * * * cd /app && dbt run >> /var/log/cron/dbt.log 2>&1 \n" > /etc/cron.d/dbt-cron
 
-# Give proper permissions and register the cron job
+# Give execution permissions and register cron job
 RUN chmod 0644 /etc/cron.d/dbt-cron && \
     crontab /etc/cron.d/dbt-cron
 
-# Start cron and tail the log to keep the container alive
-CMD cron && tail -F /var/log/cron/dbt.log
+# Create wrapper script to start cron and keep container running
+RUN echo '#!/bin/bash\n\
+service cron start\n\
+touch /var/log/cron/dbt.log\n\
+tail -f /var/log/cron/dbt.log' > /start.sh && chmod +x /start.sh
 
+
+# Run wrapper script
+CMD ["/bin/bash", "/start.sh"]

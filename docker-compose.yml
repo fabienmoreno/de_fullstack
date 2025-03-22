@@ -155,8 +155,6 @@ services:
       DBT_SCHEMA: public
     networks:
       - app-network
-    volumes:
-      - ./dbt:/app
 
 networks:
   app-network:
