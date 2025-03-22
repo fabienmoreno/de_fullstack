@@ -157,8 +157,8 @@ services:
       DBT_SCHEMA: public
     networks:
       - app-network
-    # If you want to keep the container running after dbt run for debugging:
-    command: ["tail", "-f", "/dev/null"]
+    entrypoint: ["/bin/bash", "-c"]
+    command: ["tail -f /dev/null"]
 
 networks:
   app-network:
