@@ -22,7 +22,7 @@ RUN apt-get update && \
 RUN mkdir -p /var/log/cron
 
 # Add the cron job to run dbt every 5 minutes
-RUN echo "*/5 * * * * cd /app && dbt run >> /var/log/cron/dbt.log 2>&1 \n" > /etc/cron.d/dbt-cron
+RUN echo "*/5 * * * * dbt run >> /var/log/cron/dbt.log 2>&1 \n" > /etc/cron.d/dbt-cron
 
 # Give execution permissions and register cron job
 RUN chmod 0644 /etc/cron.d/dbt-cron && \
