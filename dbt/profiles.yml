@@ -3,7 +3,7 @@ my_dbt_profile:
     dev:
       type: "{{ env_var('DBT_TYPE') }}"
       host: "{{ env_var('DBT_HOST') }}"
-      port: "{{ env_var('DBT_PORT') }}"
+      port: 5432
       user: "{{ env_var('APP_POSTGRES_USER') }}"
       password: "{{ env_var('APP_POSTGRES_PASSWORD') }}"
       dbname: "{{ env_var('APP_POSTGRES_DB') }}"

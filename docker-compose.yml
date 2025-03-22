@@ -58,7 +58,8 @@ services:
     container_name: api_vehiclecheck
     restart: always
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://${APP_POSTGRES_USER}:${APP_POSTGRES_PASSWORD}@postgres:5432/${APP_POSTGRES_DB}"
     networks:
@@ -147,7 +148,6 @@ services:
       DBT_TARGET: dev
       DBT_TYPE: postgres
       DBT_HOST: postgres
-      DBT_PORT: 5432
       APP_POSTGRES_USER: "${APP_POSTGRES_USER}"
       APP_POSTGRES_PASSWORD: "${APP_POSTGRES_PASSWORD}"
       APP_POSTGRES_DB: "${APP_POSTGRES_DB}"
