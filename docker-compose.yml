@@ -145,7 +145,6 @@ services:
       DBT_PROFILES_DIR: /root/.dbt
       DBT_PROJECT_DIR: /usr/app
       DBT_TARGET: dev
-      DBT_PROFILE: my_dbt_profile
       DBT_TYPE: postgres
       DBT_HOST: postgres
       DBT_PORT: 5432
