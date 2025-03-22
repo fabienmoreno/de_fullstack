@@ -1,17 +1,16 @@
 FROM ghcr.io/dbt-labs/dbt-postgres:1.6.0
 
-# Set working directory
 WORKDIR /usr/app
 
-# Copy dbt_project.yml and all dbt files to the container
+# Copy all dbt files to working directory
 COPY . /usr/app/
 
-# Verify the file is copied correctly (optional debug)
-RUN ls -la /usr/app
-RUN cat /usr/app/dbt_project.yml
+# Explicitly create directory and copy profiles.yml
+RUN mkdir -p /root/.dbt
+COPY profiles.yml /root/.dbt/profiles.yml
 
-# Install dependencies if you have any (optional)
+# Install dependencies
 RUN dbt deps
 
-# Final command to run dbt
-CMD ["dbt", "run"]
+ENTRYPOINT ["dbt"]
+CMD ["run"]
