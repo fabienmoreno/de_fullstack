@@ -1,14 +1,11 @@
 my_dbt_profile:
-  target: dev
   outputs:
     dev:
       type: postgres
-      host: postgres        # Update if your database is hosted elsewhere
-      user: "{{ env_var('APP_POSTGRES_USER') }}"    # Replace with your PostgreSQL username
-      password: "{{ env_var('APP_POSTGRES_PASSWORD') }}" # Replace with your PostgreSQL password
-      port: 5432             # Default PostgreSQL port
-      dbname: "{{ env_var('APP_POSTGRES_DB') }}"         # Your main database name
-      schema: public      # Schema where dbt will create models
-      threads: 1             # Number of threads for parallelism
-      keepalives_idle: 0     # Keepalive settings
-      connect_timeout: 10    # Connection timeout in seconds
+      host: postgres
+      port: 5432
+      user: ${APP_POSTGRES_USER}
+      password: ${APP_POSTGRES_PASSWORD}
+      dbname: ${APP_POSTGRES_DB}
+      schema: public
+  target: dev

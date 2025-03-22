@@ -136,32 +136,29 @@ services:
     networks:
       - app-network
 
-  dbt:
-    build: ./dbt  #  Build from the Dockerfile in the ./dbt directory
-    container_name: dbt
-    restart: on-failure
-    depends_on:
-      postgres:
-        condition: service_healthy
-    # volumes:  # Remove the volume mount!
-    #   - ./dbt:/usr/app
-    environment:
-      DBT_PROFILES_DIR: /root/.dbt/
-      DBT_PROJECT_DIR: /usr/app  # Set project directory
-      DBT_TARGET: dev
-      DBT_PROFILE: my_dbt_profile
-      DBT_TYPE: postgres
-      DBT_HOST: postgres
-      DBT_PORT: 5432
-      DBT_USER: "${APP_POSTGRES_USER}"
-      DBT_PASS: "${APP_POSTGRES_PASSWORD}"
-      DBT_DBNAME: "${APP_POSTGRES_DB}"
-      DBT_SCHEMA: public
-    networks:
-      - app-network
-    entrypoint: ["/bin/bash", "-c"]
-    command:
-      - "tail -f /dev/null"
+dbt:
+  build: ./dbt
+  container_name: dbt
+  restart: on-failure
+  depends_on:
+    postgres:
+      condition: service_healthy
+  environment:
+    DBT_PROFILES_DIR: /root/.dbt
+    DBT_PROJECT_DIR: /usr/app
+    DBT_TARGET: dev
+    DBT_PROFILE: my_dbt_profile
+    DBT_TYPE: postgres
+    DBT_HOST: postgres
+    DBT_PORT: 5432
+    DBT_USER: "${APP_POSTGRES_USER}"
+    DBT_PASS: "${APP_POSTGRES_PASSWORD}"
+    DBT_DBNAME: "${APP_POSTGRES_DB}"
+    DBT_SCHEMA: public
+  networks:
+    - app-network
+  # If you want to keep the container running after dbt run for debugging:
+  command: ["tail", "-f", "/dev/null"]
 
 networks:
   app-network:
