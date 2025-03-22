@@ -152,8 +152,8 @@ services:
       DBT_HOST: postgres
       DBT_PORT: 5432
       APP_POSTGRES_USER: "${APP_POSTGRES_USER}"
-      DBT_PASS: "${APP_POSTGRES_PASSWORD}"
-      DBT_DBNAME: "${APP_POSTGRES_DB}"
+      APP_POSTGRES_PASSWORD: "${APP_POSTGRES_PASSWORD}"
+      APP_POSTGRES_DB: "${APP_POSTGRES_DB}"
       DBT_SCHEMA: public
     networks:
       - app-network
