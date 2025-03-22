@@ -4,8 +4,8 @@ my_dbt_profile:
       type: postgres
       host: postgres
       port: 5432
-      user: ${APP_POSTGRES_USER}
-      password: ${APP_POSTGRES_PASSWORD}
-      dbname: ${APP_POSTGRES_DB}
+      user: "{{ env_var('APP_POSTGRES_USER') }}"
+      password: "{{ env_var('APP_POSTGRES_PASSWORD') }}"
+      dbname: "{{ env_var('APP_POSTGRES_DB') }}"
       schema: public
   target: dev
