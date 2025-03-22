@@ -70,8 +70,7 @@ services:
       - "traefik.http.routers.api-vehiclecheck.rule=Host(`api-vehiclecheck.de.fabienmoreno.me`)"
       - "traefik.http.routers.api-vehiclecheck.entrypoints=websecure"
       - "traefik.http.routers.api-vehiclecheck.tls.certresolver=myresolver"
-    command: >
-      sh -c "flask db init --directory migrations 2>/dev/null || true && flask db migrate -m 'Initial migration' 2>/dev/null || true && flask db upgrade && python app.py"
+    command: sh -c "flask db upgrade && python app.py"
 
   # 🔹 Metabase Database
   metabase-db:

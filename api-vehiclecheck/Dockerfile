@@ -1,17 +1,12 @@
-# Use official Python image
-FROM python:3.9
+FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Copy application files
-COPY . .
-
-# Install dependencies
+COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the application port
+COPY . /app
+
 EXPOSE 5000
 
-# Run migrations and start the app
 CMD ["sh", "-c", "flask db upgrade && python app.py"]
