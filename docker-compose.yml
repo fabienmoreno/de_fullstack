@@ -136,7 +136,8 @@ services:
       - app-network
 
   dbt:
-    build: ./dbt
+    build:
+      context: ./dbt
     container_name: dbt
     restart: on-failure
     depends_on:
@@ -154,10 +155,8 @@ services:
       DBT_SCHEMA: public
     networks:
       - app-network
-    ports:
-      - "8081:8081"
-    entrypoint: ["/bin/bash", "-c"]
-    command: ["tail -f /dev/null"]
+    volumes:
+      - ./dbt:/app
 
 networks:
   app-network:
