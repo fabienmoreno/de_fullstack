@@ -5,4 +5,4 @@ SELECT
     COUNT(*) AS number_of_cars
 FROM {{ source('vehicle_data', 'vehicle') }}
 GROUP BY registration_year
-ORDER BY registration_year;
+ORDER BY registration_year
